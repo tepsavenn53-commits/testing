@@ -943,17 +943,27 @@
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'moeys-eval-app';
     let cloudDocRef = null;
 
+    // --- State សម្រាប់ Authentication បណ្ដោះអាសន្ន ---
+    let isAuthenticated = false;
+
     // ៣. ប្រព័ន្ធគ្រប់គ្រងសិទ្ធិ និងចូលប្រើប្រាស់ (Authentication Engine)
     function checkAuth() {
-      const isAuthed = sessionStorage.getItem('moeys_authenticated') === 'true';
+      // ពិនិត្យមើលទាំងអថេរក្នុង RAM និង Session Storage
+      const isAuthedSession = sessionStorage.getItem('moeys_authenticated') === 'true';
+      
+      // អនុញ្ញាតដោយស្វ័យប្រវត្តិប្រសិនបើបើកពីកុំព្យូទ័រផ្ទាល់ (file://) ដើម្បីងាយស្រួលអភិវឌ្ឍន៍
+      const isLocalFile = window.location.protocol === 'file:';
+      
       const loginScreen = document.getElementById('login-screen');
       const appContainer = document.getElementById('app-container');
       
-      if (isAuthed) {
+      if (isAuthedSession || isAuthenticated || isLocalFile) {
+        isAuthenticated = true;
         if (loginScreen) loginScreen.classList.add('hidden');
         if (appContainer) appContainer.classList.remove('hidden');
         return true;
       } else {
+        isAuthenticated = false;
         if (loginScreen) loginScreen.classList.remove('hidden');
         if (appContainer) appContainer.classList.add('hidden');
         return false;
@@ -967,7 +977,14 @@
       const errorDiv = document.getElementById('login-error');
       
       if (userVal === 'admin' && passVal === 'admin_khmer') {
-        sessionStorage.setItem('moeys_authenticated', 'true');
+        // រក្សាទុកទាំងក្នុង Session Storage និងអថេរបណ្ដោះអាសន្ន
+        try {
+          sessionStorage.setItem('moeys_authenticated', 'true');
+        } catch (storageError) {
+          console.warn("មិនអាចរក្សាទុកក្នុង sessionStorage បានទេ៖", storageError);
+        }
+        isAuthenticated = true;
+        
         errorDiv.classList.add('hidden');
         checkAuth();
         refreshUI();
@@ -983,7 +1000,11 @@
         "ចាកចេញពីប្រព័ន្ធ",
         "តើលោកគ្រូអ្នកគ្រូពិតជាចង់ចាកចេញពីគណនីបច្ចុប្បន្នមែនទេ?",
         () => {
-          sessionStorage.removeItem('moeys_authenticated');
+          try {
+            sessionStorage.removeItem('moeys_authenticated');
+          } catch (e) {}
+          
+          isAuthenticated = false;
           document.getElementById('login-username').value = '';
           document.getElementById('login-password').value = '';
           checkAuth();
