@@ -1,186 +1,253 @@
 <!DOCTYPE html>
 <html lang="km">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ប្រព័ន្ធវាយតម្លៃសិស្ស</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <script src="https://cdn.tailwindcss.com"></script>
+    <title>ប្រព័ន្ធវាយតម្លៃសិស្ស</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
 
 </head>
 
 <body class="bg-slate-100">
 
-  <!-- LOGIN SCREEN -->
-  <div id="login-screen"
-       class="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-teal-900 to-emerald-900">
+    <!-- LOGIN PAGE -->
+    <div
+        id="login-screen"
+        class="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-teal-900 to-emerald-700"
+    >
 
-    <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md">
+        <div class="bg-white w-full max-w-md p-8 rounded-2xl shadow-2xl">
 
-      <h1 class="text-2xl font-bold text-center text-teal-800 mb-2">
-        ប្រព័ន្ធវាយតម្លៃសិស្ស
-      </h1>
+            <div class="text-center mb-8">
 
-      <p class="text-center text-slate-500 mb-6">
-        សូមចូលប្រើប្រាស់ប្រព័ន្ធ
-      </p>
+                <h1 class="text-3xl font-bold text-teal-800 mb-2">
+                    ប្រព័ន្ធវាយតម្លៃសិស្ស
+                </h1>
 
-      <div id="login-error"
-           class="hidden bg-red-100 text-red-700 p-3 rounded-lg mb-4 text-sm font-bold">
-        Username ឬ Password មិនត្រឹមត្រូវ
-      </div>
+                <p class="text-slate-500">
+                    Student Evaluation System
+                </p>
 
-      <form id="login-form">
+            </div>
 
-        <div class="mb-4">
-          <label class="block mb-2 font-bold">
-            Username
-          </label>
+            <!-- ERROR -->
+            <div
+                id="login-error"
+                class="hidden bg-red-100 text-red-700 p-3 rounded-lg mb-4 text-center font-bold"
+            >
+                Username ឬ Password មិនត្រឹមត្រូវ
+            </div>
 
-          <input
-            type="text"
-            id="login-username"
-            class="w-full border border-slate-300 rounded-lg px-4 py-3"
-            placeholder="admin"
-            required
-          >
+            <!-- FORM -->
+            <form id="login-form">
+
+                <div class="mb-4">
+
+                    <label class="block mb-2 font-bold text-slate-700">
+                        Username
+                    </label>
+
+                    <input
+                        type="text"
+                        id="login-username"
+                        class="w-full border border-slate-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-teal-600"
+                        placeholder="admin"
+                        required
+                    >
+
+                </div>
+
+                <div class="mb-6">
+
+                    <label class="block mb-2 font-bold text-slate-700">
+                        Password
+                    </label>
+
+                    <input
+                        type="password"
+                        id="login-password"
+                        class="w-full border border-slate-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-teal-600"
+                        placeholder="********"
+                        required
+                    >
+
+                </div>
+
+                <button
+                    type="submit"
+                    class="w-full bg-teal-700 hover:bg-teal-600 text-white py-3 rounded-xl font-bold text-lg transition"
+                >
+                    ចូលប្រើប្រាស់
+                </button>
+
+            </form>
+
+            <!-- LOGIN INFO -->
+            <div class="mt-6 bg-slate-100 p-4 rounded-xl text-sm">
+
+                <div class="font-bold mb-2">
+                    Login Demo
+                </div>
+
+                <div>
+                    Username: <b>admin</b>
+                </div>
+
+                <div>
+                    Password: <b>admin_khmer</b>
+                </div>
+
+            </div>
+
         </div>
 
-        <div class="mb-6">
-          <label class="block mb-2 font-bold">
-            Password
-          </label>
-
-          <input
-            type="password"
-            id="login-password"
-            class="w-full border border-slate-300 rounded-lg px-4 py-3"
-            placeholder="********"
-            required
-          >
-        </div>
-
-        <button
-          type="submit"
-          class="w-full bg-teal-700 hover:bg-teal-600 text-white py-3 rounded-lg font-bold">
-          ចូលប្រើប្រាស់
-        </button>
-
-      </form>
-
-    </div>
-  </div>
-
-  <!-- MAIN APP -->
-  <div id="app-container" class="hidden min-h-screen">
-
-    <div class="bg-white shadow p-4 flex justify-between items-center">
-
-      <h2 class="text-xl font-bold text-teal-800">
-        Dashboard
-      </h2>
-
-      <button
-        onclick="logout()"
-        class="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg font-bold">
-        Logout
-      </button>
-
     </div>
 
-    <div class="p-6">
+    <!-- MAIN APP -->
+    <div id="app-container" class="hidden min-h-screen">
 
-      <div class="bg-white rounded-xl shadow p-6">
+        <!-- HEADER -->
+        <header class="bg-white shadow">
 
-        <h3 class="text-lg font-bold mb-2">
-          ស្វាគមន៍មកកាន់ប្រព័ន្ធ
-        </h3>
+            <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
 
-        <p class="text-slate-600">
-          Login ដំណើរការជោគជ័យលើ GitHub Pages
-        </p>
+                <h2 class="text-2xl font-bold text-teal-800">
+                    Dashboard
+                </h2>
 
-      </div>
+                <button
+                    onclick="logout()"
+                    class="bg-red-600 hover:bg-red-500 text-white px-5 py-2 rounded-xl font-bold"
+                >
+                    Logout
+                </button>
+
+            </div>
+
+        </header>
+
+        <!-- CONTENT -->
+        <main class="p-6">
+
+            <div class="bg-white rounded-2xl shadow p-8">
+
+                <h3 class="text-2xl font-bold text-teal-700 mb-4">
+                    ស្វាគមន៍មកកាន់ប្រព័ន្ធ
+                </h3>
+
+                <p class="text-slate-600 text-lg">
+                    Login ដំណើរការជោគជ័យលើ GitHub Pages
+                </p>
+
+            </div>
+
+        </main>
 
     </div>
 
-  </div>
+    <!-- SCRIPT -->
+    <script>
 
-  <script>
+        // LOGIN ACCOUNT
+        const USERNAME = "admin";
+        const PASSWORD = "admin_khmer";
 
-    // USERNAME & PASSWORD
-    const USERNAME = "admin";
-    const PASSWORD = "admin_khmer";
+        // ELEMENTS
+        const loginScreen =
+            document.getElementById("login-screen");
 
-    // CHECK LOGIN
-    function checkAuth() {
+        const appContainer =
+            document.getElementById("app-container");
 
-      const isLoggedIn =
-        localStorage.getItem("moeys_auth") === "true";
+        const loginForm =
+            document.getElementById("login-form");
 
-      if (isLoggedIn) {
+        const loginError =
+            document.getElementById("login-error");
 
-        document.getElementById("login-screen").style.display = "none";
+        // CHECK AUTH
+        function checkAuth() {
 
-        document.getElementById("app-container").classList.remove("hidden");
+            const isLoggedIn =
+                localStorage.getItem("student_auth");
 
-      } else {
+            if (isLoggedIn === "true") {
 
-        document.getElementById("login-screen").style.display = "flex";
+                loginScreen.classList.add("hidden");
 
-        document.getElementById("app-container").classList.add("hidden");
+                appContainer.classList.remove("hidden");
 
-      }
-    }
+            } else {
 
-    // LOGIN
-    document
-      .getElementById("login-form")
-      .addEventListener("submit", function(e) {
+                loginScreen.classList.remove("hidden");
 
-        e.preventDefault();
+                appContainer.classList.add("hidden");
 
-        const username =
-          document.getElementById("login-username").value.trim();
-
-        const password =
-          document.getElementById("login-password").value.trim();
-
-        const errorDiv =
-          document.getElementById("login-error");
-
-        if (
-          username === USERNAME &&
-          password === PASSWORD
-        ) {
-
-          localStorage.setItem("moeys_auth", "true");
-
-          errorDiv.classList.add("hidden");
-
-          checkAuth();
-
-        } else {
-
-          errorDiv.classList.remove("hidden");
+            }
 
         }
 
-      });
+        // LOGIN
+        loginForm.addEventListener("submit", function(e) {
 
-    // LOGOUT
-    function logout() {
+            e.preventDefault();
 
-      localStorage.removeItem("moeys_auth");
+            const username =
+                document
+                .getElementById("login-username")
+                .value
+                .trim();
 
-      location.reload();
+            const password =
+                document
+                .getElementById("login-password")
+                .value
+                .trim();
 
-    }
+            // CHECK USER
+            if (
+                username === USERNAME &&
+                password === PASSWORD
+            ) {
 
-    // START
-    checkAuth();
+                localStorage.setItem(
+                    "student_auth",
+                    "true"
+                );
 
-  </script>
+                loginError.classList.add("hidden");
+
+                checkAuth();
+
+            } else {
+
+                loginError.classList.remove("hidden");
+
+            }
+
+        });
+
+        // LOGOUT
+        function logout() {
+
+            localStorage.removeItem(
+                "student_auth"
+            );
+
+            location.reload();
+
+        }
+
+        // START
+        window.onload = function() {
+
+            checkAuth();
+
+        };
+
+    </script>
 
 </body>
 </html>
