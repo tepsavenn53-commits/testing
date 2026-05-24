@@ -220,7 +220,7 @@
               <h1 class="text-lg md:text-xl font-muol leading-relaxed tracking-wide text-amber-400">កម្មវិធីវាយតម្លៃពិន្ទុ ចរិយាសម្បទា និងបំណិនសម្បទា</h1>
               <p class="text-xs text-teal-100/85 mt-1 flex items-center gap-2 font-content">
                 <span class="inline-block w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping"></span>
-                សាលាបឋមសិក្សា ម៉ឹង សំផន • ប្រព័ន្ធគ្រប់គ្រងឌីជីថលគាំទ្រ Excel និង Gemini AI
+                សាលាបឋមសិក្សា ម៉ឹង សំផន • ប្រព័ន្ធផ្ទុកទិន្នន័យ Cloud រួមគ្នា (Real-time Multi-user)
               </p>
             </div>
           </div>
@@ -304,8 +304,8 @@
           <div class="text-xs text-slate-700 space-y-2 flex-grow font-content">
             <h4 class="font-bold text-emerald-900 font-muol">💡 គន្លឹះវាយបញ្ចូលពិន្ទុជាចង្កោមតាមរយៈ Excel យ៉ាងរហ័ស៖</h4>
             <p class="leading-relaxed">
-              ១. លោកគ្រូអ្នកគ្រូអាចទាញយកគំរូដោយចុចប៊ូតុង <strong>«ទាញយកគំរូ Excel»</strong> ឬប្រើប៊ូតុង <strong>«ទាញចេញ Excel (.xlsx)»</strong> ដើម្បីទទួលបានតារាងឈ្មោះសិស្សស្រាប់។<br />
-              ២. បើកឯកសារ Excel នោះ រួចបំពេញព័ត៌មានសិស្ស គូសសញ្ញា ✓ ក្នុងតារាងចរិយាសម្បទា (សន្លឹកទី២) និងបំពេញពិន្ទុ ០-៤ ក្នុងតារាងបំណិន (សឹកទី៣)។<br />
+              ១. លោកគ្រូអ្នកគ្រូអាចទាញយកគំរូដោយចុចប៊ូតុង <strong>«ទាញយកគំរូ Excel»</strong> ឬប្រើប៊ូតុង <strong>«ទាញចេញ Excel (.xlsx)»</strong> ដើម្បីទទួលបានតារាងឈ្មោះសិស្សស្រាប់。<br />
+              ២. បើកឯកសារ Excel នោះ រួចបំពេញព័ត៌មានសិស្ស គូសសញ្ញា ✓ ក្នុងតារាងចរិយាសម្បទា (សន្លឹកទី២) និងបំពេញពិន្ទុ ០-៤ ក្នុងតារាងបំណិន (សឹកទី៣)。<br />
               ៣. រក្សាទុក រួចចុចប៊ូតុង <strong>«បញ្ចូលពី Excel (.xlsx)»</strong> ដើម្បីធ្វើបច្ចុប្បន្នភាពចូលក្នុងកម្មវិធីក្នុងពេលតែ ១វិនាទី!
             </p>
           </div>
@@ -782,7 +782,11 @@
   </div>
 
   <!-- ==================== JavaScript Code Engine ==================== -->
-  <script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
     // ១. ជំនួយការគណនាបំណិនចរិយាសម្បទា
     function getBehaviorLevel(score) {
       if (score >= 54) return { text: "ល្អណាស់", color: "text-emerald-600 bg-emerald-50 border-emerald-200" };
@@ -931,6 +935,14 @@
     const templateSkillColumnMapping = {};
     let isXlsxLoaded = false;
 
+    // --- ប្រព័ន្ធ Firebase Real-time Cloud Storage ---
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'moeys-eval-app';
+    let cloudDocRef = null;
+
     // ៣. ប្រព័ន្ធគ្រប់គ្រងសិទ្ធិ និងចូលប្រើប្រាស់ (Authentication Engine)
     function checkAuth() {
       const isAuthed = sessionStorage.getItem('moeys_authenticated') === 'true';
@@ -998,8 +1010,8 @@
       return students.filter(s => (s.className || classConfig.className) === selectedClassFilter);
     }
 
-    // ៤. ការចាប់ផ្តើមដំបូង (Initializations)
-    window.onload = function() {
+    // ៤. ការចាប់ផ្តើមដំបូង (Initializations) និង Cloud Sync
+    window.onload = async function() {
       const authed = checkAuth();
       lucide.createIcons(); 
 
@@ -1007,68 +1019,79 @@
         isXlsxLoaded = true;
       }
       
-      const savedStudents = localStorage.getItem('moeys_students_eval_v5');
-      const savedConfig = localStorage.getItem('moeys_class_config_v5');
+      // ទាញយកការកំណត់ API Key ចាស់ពី Local Browser (ប្រសិនបើមាន)
       const savedApiKey = localStorage.getItem('moeys_gemini_api_key_v5');
       const savedSheetUrl = localStorage.getItem('moeys_google_sheet_url_v5');
+      if (savedApiKey) document.getElementById('gemini-api-key').value = savedApiKey;
+      if (savedSheetUrl) document.getElementById('config-google-sheet-url').value = savedSheetUrl;
 
-      if (savedStudents) {
-        students = JSON.parse(savedStudents);
+      // ធ្វើការតភ្ជាប់សុវត្ថិភាពទៅកាន់ប្រព័ន្ធ Cloud Database
+      if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+        await signInWithCustomToken(auth, __initial_auth_token);
       } else {
-        students = INITIAL_STUDENTS;
+        await signInAnonymously(auth);
       }
 
-      if (savedConfig) {
-        classConfig = JSON.parse(savedConfig);
-      }
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          cloudDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'appData', 'state');
+          
+          // ស្តាប់ការផ្លាស់ប្តូរទិន្នន័យ (Real-time listener): ពេលគ្រូផ្សេងកែប្រែ ទិន្នន័យនឹងលោតផ្លាស់ប្តូរភ្លាមៗ
+          onSnapshot(cloudDocRef, (docSnap) => {
+            if (docSnap.exists()) {
+              const data = docSnap.data();
+              students = data.students || [];
+              classConfig = data.classConfig || classConfig;
+              
+              // ធ្វើបច្ចុប្បន្នភាព UI
+              document.getElementById('config-school').value = classConfig.schoolName;
+              document.getElementById('config-year').value = classConfig.academicYear;
+              
+              const grades = ["ថ្នាក់ទី ១", "ថ្នាក់ទី ២", "ថ្នាក់ទី ៣", "ថ្នាក់ទី ៤", "ថ្នាក់ទី ៥", "ថ្នាក់ទី ៦"];
+              const divisions = ["ក", "ខ", "គ", "ឃ"];
+              const currentGrade = grades.find(g => classConfig.className.includes(g)) || "ថ្នាក់ទី ៦";
+              const currentDivision = divisions.find(d => classConfig.className.endsWith(d) || classConfig.className.includes(d)) || "ក";
+              
+              document.getElementById('config-grade').value = currentGrade;
+              document.getElementById('config-division').value = currentDivision;
 
-      if (savedApiKey) {
-        document.getElementById('gemini-api-key').value = savedApiKey;
-      }
+              // រក្សាសិស្សដែលកំពុងមើល ឬចាប់យកសិស្សដំបូង
+              if (students.length > 0 && !students.find(s => s.id === activeStudentId)) {
+                 activeStudentId = students[0].id;
+              }
+              
+              refreshUI();
+            } else {
+              // បើមិនទាន់មានទិន្នន័យក្នុង Cloud ទេ បង្កើតដំបូង
+              if(students.length === 0) students = INITIAL_STUDENTS;
+              saveDataToLocalStorage();
+            }
+          }, (error) => {
+            console.error("Cloud Sync Error:", error);
+            showToast("បរាជ័យក្នុងការតភ្ជាប់ទៅកាន់ Cloud!", "error");
+          });
+        }
+      });
 
-      if (savedSheetUrl) {
-        document.getElementById('config-google-sheet-url').value = savedSheetUrl;
-      }
-
-      document.getElementById('config-school').value = classConfig.schoolName;
-      document.getElementById('config-year').value = classConfig.academicYear;
-      
-      const grades = ["ថ្នាក់ទី ១", "ថ្នាក់ទី ២", "ថ្នាក់ទី ៣", "ថ្នាក់ទី ៤", "ថ្នាក់ទី ៥", "ថ្នាក់ទី ៦"];
-      const divisions = ["ក", "ខ", "គ", "ឃ"];
-      const currentGrade = grades.find(g => classConfig.className.includes(g)) || "ថ្នាក់ទី ៦";
-      const currentDivision = divisions.find(d => classConfig.className.endsWith(d) || classConfig.className.includes(d)) || "ក";
-      
-      document.getElementById('config-grade').value = currentGrade;
-      document.getElementById('config-division').value = currentDivision;
-
-      const classFiltered = getFilteredByClass();
-      if (classFiltered.length > 0) {
-        activeStudentId = classFiltered[0].id;
-      } else if (students.length > 0) {
-        activeStudentId = students[0].id;
-      }
-
-      updateCurrentStudent();
-      updateClassLabel();
-      saveDataToLocalStorage();
-      
       if (authed) {
         switchTab('list');
       }
     };
 
     function saveDataToLocalStorage() {
-      localStorage.setItem('moeys_students_eval_v5', JSON.stringify(students));
-      localStorage.setItem('moeys_class_config_v5', JSON.stringify(classConfig));
-      
+      // រក្សាទុក API Keys ក្នុងម៉ាស៊ីនគ្រូម្នាក់ៗដដែល
       const keyInput = document.getElementById('gemini-api-key').value;
-      if (keyInput) {
-        localStorage.setItem('moeys_gemini_api_key_v5', keyInput);
-      }
+      if (keyInput) localStorage.setItem('moeys_gemini_api_key_v5', keyInput);
 
       const sheetUrlInput = document.getElementById('config-google-sheet-url').value;
-      if (sheetUrlInput) {
-        localStorage.setItem('moeys_google_sheet_url_v5', sheetUrlInput);
+      if (sheetUrlInput) localStorage.setItem('moeys_google_sheet_url_v5', sheetUrlInput);
+
+      // បញ្ជូនទិន្នន័យទៅកាន់ប្រព័ន្ធ Live Cloud Database ជំនួសឱ្យ LocalStorage
+      if (cloudDocRef) {
+         setDoc(cloudDocRef, {
+            students: students,
+            classConfig: classConfig
+         }, { merge: true });
       }
     }
 
